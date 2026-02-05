@@ -28,7 +28,7 @@ model Product {
   lastUpdated  DateTime
   isStale      Boolean        @default(false)
   providerId   String
-  provider     Provider       @relation(fields: [providerId], references: [id])
+  provider     Provider       @relation(fields: [providerId], references: [id], onDelete: Cascade)
   priceHistory PriceHistory[]
 
   @@unique([externalId, providerId])
@@ -44,7 +44,7 @@ model PriceHistory {
   currency  String
   changedAt DateTime @default(now())
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([changedAt])
