@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Provider {
+  id       String    @id @default(uuid())
+
+  name     String    @unique
+  baseUrl  String
+  isActive Boolean   @default(true)
+  products Product[]
+}
+
+model Product {
+  id           String         @id @default(uuid())
+
+  externalId   String
+  name         String
+  description  String?
+  currentPrice Decimal
+  currency     String
+  availability Boolean
+  lastUpdated  DateTime
+  isStale      Boolean        @default(false)
+  providerId   String
+  provider     Provider       @relation(fields: [providerId], references: [id])
+  priceHistory PriceHistory[]
+
+  @@unique([externalId, providerId])
+  @@index([name])
+  @@index([availability])
+  @@index([currentPrice])
+}
+
+model PriceHistory {
+  id        String   @id @default(uuid())
+
+  price     Decimal
+  currency  String
+  changedAt DateTime @default(now())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([changedAt])
+}
