@@ -1,0 +1,54 @@
+{
+  "products": [
+    {
+      "productId": "soft-001",
+      "title": "IDE Pro License",
+      "details": "Professional integrated development environment with advanced debugging tools.",
+      "cost": 94.32,
+      "currencyCode": "USD",
+      "inStock": true,
+      "updatedAt": "2026-02-05T20:49:30.231Z",
+      "type": "License"
+    },
+    {
+      "productId": "soft-002",
+      "title": "Cloud Storage 1TB",
+      "details": "Secure cloud storage solution with automatic backup and sync.",
+      "cost": 7.22,
+      "currencyCode": "USD",
+      "inStock": true,
+      "updatedAt": "2026-02-05T20:49:30.231Z",
+      "type": "Subscription"
+    },
+    {
+      "productId": "soft-003",
+      "title": "API Gateway Pro",
+      "details": "Enterprise-grade API management platform with rate limiting and analytics.",
+      "cost": 150.81,
+      "currencyCode": "EUR",
+      "inStock": true,
+      "updatedAt": "2026-02-05T20:49:30.231Z",
+      "type": "License"
+    },
+    {
+      "productId": "soft-004",
+      "title": "CI/CD Pipeline Tool",
+      "details": "Automated continuous integration and deployment solution for teams.",
+      "cost": 50.47,
+      "currencyCode": "USD",
+      "inStock": false,
+      "updatedAt": "2026-02-05T20:49:30.231Z",
+      "type": "Subscription"
+    },
+    {
+      "productId": "soft-005",
+      "title": "Security Scanner",
+      "details": "Comprehensive vulnerability scanner for web applications and APIs.",
+      "cost": 235.85,
+      "currencyCode": "GBP",
+      "inStock": true,
+      "updatedAt": "2026-02-05T20:49:30.231Z",
+      "type": "License"
+    }
+  ]
+}

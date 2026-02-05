@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -9,6 +9,63 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Provider A - EBooks (Standard payload structure)
+  provider-a:
+    build:
+      context: ./providers-data
+      dockerfile: Dockerfile
+    volumes:
+      - ./providers-data/provider-a.json:/data/db.json
+    ports:
+      - "3001:3000"
+    environment:
+      - ID_FIELD=id
+
+  # Provider B - Software (Alternative field names: productId, cost, inStock)
+  provider-b:
+    build:
+      context: ./providers-data
+      dockerfile: Dockerfile
+    volumes:
+      - ./providers-data/provider-b.json:/data/db.json
+    ports:
+      - "3002:3000"
+    environment:
+      - ID_FIELD=productId
+
+  # Provider C - Courses (Nested structure, identifier as ID)
+  provider-c:
+    build:
+      context: ./providers-data
+      dockerfile: Dockerfile
+    volumes:
+      - ./providers-data/provider-c.json:/data/db.json
+    ports:
+      - "3003:3000"
+    environment:
+      - ID_FIELD=identifier
+
+  # Price fluctuation service - updates provider data via REST API
+  fluctuator:
+    build:
+      context: ./providers-data
+      dockerfile: Dockerfile.fluctuate
+    depends_on:
+      - provider-a
+      - provider-b
+      - provider-c
+    environment:
+      - PROVIDER_A_URL=http://provider-a:3000
+      - PROVIDER_B_URL=http://provider-b:3000
+      - PROVIDER_C_URL=http://provider-c:3000
+      - FLUCTUATION_INTERVAL_MS=5000
+      - FLUCTUATION_FACTOR=0.15
 
 volumes:
   postgres_data:

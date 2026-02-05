@@ -1,0 +1,109 @@
+{
+  "products": [
+    {
+      "identifier": "course-001",
+      "info": {
+        "title": "Full Stack Web Development Bootcamp",
+        "summary": "Complete guide to building modern web applications from scratch.",
+        "instructor": "John Smith"
+      },
+      "pricing": {
+        "amount": 66.63,
+        "currency": "USD"
+      },
+      "stock": {
+        "available": false,
+        "seats": 38
+      },
+      "metadata": {
+        "lastModified": 1770324570232,
+        "createdAt": 1736157600000,
+        "category": "Web Development"
+      }
+    },
+    {
+      "identifier": "course-002",
+      "info": {
+        "title": "Machine Learning Fundamentals",
+        "summary": "Introduction to ML concepts, algorithms, and practical applications.",
+        "instructor": "Dr. Sarah Johnson"
+      },
+      "pricing": {
+        "amount": 172.26,
+        "currency": "USD"
+      },
+      "stock": {
+        "available": true,
+        "seats": 61
+      },
+      "metadata": {
+        "lastModified": 1770324570232,
+        "createdAt": 1736157600000,
+        "category": "Data Science"
+      }
+    },
+    {
+      "identifier": "course-003",
+      "info": {
+        "title": "DevOps Engineering Masterclass",
+        "summary": "Learn Docker, Kubernetes, CI/CD, and cloud infrastructure management.",
+        "instructor": "Mike Chen"
+      },
+      "pricing": {
+        "amount": 56.41,
+        "currency": "USD"
+      },
+      "stock": {
+        "available": true,
+        "seats": 39
+      },
+      "metadata": {
+        "lastModified": 1770324570232,
+        "createdAt": 1736157600000,
+        "category": "DevOps"
+      }
+    },
+    {
+      "identifier": "course-004",
+      "info": {
+        "title": "System Design Interview Prep",
+        "summary": "Prepare for system design interviews at top tech companies.",
+        "instructor": "Alex Rivera"
+      },
+      "pricing": {
+        "amount": 56.59,
+        "currency": "USD"
+      },
+      "stock": {
+        "available": false,
+        "seats": 37
+      },
+      "metadata": {
+        "lastModified": 1770324570232,
+        "createdAt": 1736157600000,
+        "category": "Career"
+      }
+    },
+    {
+      "identifier": "course-005",
+      "info": {
+        "title": "TypeScript Advanced Patterns",
+        "summary": "Deep dive into advanced TypeScript features and patterns.",
+        "instructor": "Emma Wilson"
+      },
+      "pricing": {
+        "amount": 21.33,
+        "currency": "USD"
+      },
+      "stock": {
+        "available": true,
+        "seats": 24
+      },
+      "metadata": {
+        "lastModified": 1770324570232,
+        "createdAt": 1736157600000,
+        "category": "Programming"
+      }
+    }
+  ]
+}

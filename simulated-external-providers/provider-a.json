@@ -1,0 +1,54 @@
+{
+  "products": [
+    {
+      "id": "ebook-001",
+      "name": "JavaScript: The Good Parts",
+      "description": "A comprehensive guide to the best features of JavaScript programming language.",
+      "price": 83.74,
+      "currency": "USD",
+      "availability": false,
+      "lastUpdated": "2026-02-05T20:49:30.228Z",
+      "category": "Programming"
+    },
+    {
+      "id": "ebook-002",
+      "name": "Clean Code",
+      "description": "A handbook of agile software craftsmanship by Robert C. Martin.",
+      "price": 42.05,
+      "currency": "USD",
+      "availability": false,
+      "lastUpdated": "2026-02-05T20:49:30.228Z",
+      "category": "Software Engineering"
+    },
+    {
+      "id": "ebook-003",
+      "name": "Design Patterns",
+      "description": "Elements of reusable object-oriented software by Gang of Four.",
+      "price": 42.59,
+      "currency": "USD",
+      "availability": false,
+      "lastUpdated": "2026-02-05T20:49:30.228Z",
+      "category": "Software Engineering"
+    },
+    {
+      "id": "ebook-004",
+      "name": "The Pragmatic Programmer",
+      "description": "Your journey to mastery - classic tips for modern software developers.",
+      "price": 27.23,
+      "currency": "EUR",
+      "availability": false,
+      "lastUpdated": "2026-02-05T20:49:30.228Z",
+      "category": "Programming"
+    },
+    {
+      "id": "ebook-005",
+      "name": "Domain-Driven Design",
+      "description": "Tackling complexity in the heart of software by Eric Evans.",
+      "price": 32.42,
+      "currency": "USD",
+      "availability": false,
+      "lastUpdated": "2026-02-05T20:49:30.228Z",
+      "category": "Architecture"
+    }
+  ]
+}
