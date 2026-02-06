@@ -18,10 +18,10 @@ services:
   # Provider A - EBooks (Standard payload structure)
   provider-a:
     build:
-      context: ./providers-data
+      context: ./simulated-external-providers
       dockerfile: Dockerfile
     volumes:
-      - ./providers-data/provider-a.json:/data/db.json
+      - ./simulated-external-providers/provider-a.json:/data/db.json
     ports:
       - "3001:3000"
     environment:
@@ -30,10 +30,10 @@ services:
   # Provider B - Software (Alternative field names: productId, cost, inStock)
   provider-b:
     build:
-      context: ./providers-data
+      context: ./simulated-external-providers
       dockerfile: Dockerfile
     volumes:
-      - ./providers-data/provider-b.json:/data/db.json
+      - ./simulated-external-providers/provider-b.json:/data/db.json
     ports:
       - "3002:3000"
     environment:
@@ -42,10 +42,10 @@ services:
   # Provider C - Courses (Nested structure, identifier as ID)
   provider-c:
     build:
-      context: ./providers-data
+      context: ./simulated-external-providers
       dockerfile: Dockerfile
     volumes:
-      - ./providers-data/provider-c.json:/data/db.json
+      - ./simulated-external-providers/provider-c.json:/data/db.json
     ports:
       - "3003:3000"
     environment:
@@ -54,7 +54,7 @@ services:
   # Price fluctuation service - updates provider data via REST API
   fluctuator:
     build:
-      context: ./providers-data
+      context: ./simulated-external-providers
       dockerfile: Dockerfile.fluctuate
     depends_on:
       - provider-a

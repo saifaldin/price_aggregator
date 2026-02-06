@@ -1,10 +1,13 @@
+import 'dotenv/config';
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PrismaModule } from './prisma';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AppController } from './app.controller.js';
+import { AppService } from './app.service.js';
+import { AggregationModule } from './aggregation/aggregation.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, ScheduleModule.forRoot(), AggregationModule],
   controllers: [AppController],
   providers: [AppService],
 })
