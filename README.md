@@ -1,98 +1,237 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Product Price Aggregator
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS API that aggregates digital product pricing from multiple simulated external providers, normalizes their data, stores it in PostgreSQL, and exposes a REST API with optional Server-Sent Events (SSE) for real-time updates.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## Prerequisites
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Node.js** 20+
+- **npm** (or compatible package manager)
+- **PostgreSQL** 16+ (for local development)
+- **Docker** and **Docker Compose** (optional, for full stack including simulated providers)
 
-## Project setup
+## Architecture Overview
 
-```bash
-$ npm install
+```mermaid
+flowchart TB
+    subgraph Providers [Simulated External Providers]
+        P1[Provider A - EBooks]
+        P2[Provider B - Software]
+        P3[Provider C - Courses]
+    end
+
+    subgraph AggregationService [Aggregation Layer]
+        Scheduler[Scheduled Task]
+        Fetcher[Concurrent Fetcher]
+        Normalizer[Data Normalizer]
+    end
+
+    subgraph DataLayer [Data Layer]
+        Prisma[Prisma ORM]
+        PG[(PostgreSQL)]
+    end
+
+    subgraph API [REST API]
+        Products["/products"]
+        ProductDetail["/products/:id"]
+        Changes["/products/changes"]
+        SSE["/products/stream SSE"]
+    end
+
+    Scheduler --> Fetcher
+    Fetcher --> P1
+    Fetcher --> P2
+    Fetcher --> P3
+    P1 --> Normalizer
+    P2 --> Normalizer
+    P3 --> Normalizer
+    Normalizer --> Prisma
+    Prisma --> PG
+    PG --> Products
 ```
 
-## Compile and run the project
+- **Provider simulation**:
+    - Three services (Provider A, B, C) are simulated with a seed json data and a simple json server.
+    - Providers expose different payload shapes (e.g. `price` vs `cost`, `availability` vs `inStock`, nested structures).
+    - Service *fluctuator* periodically updates their data to simulate live changes.
 
-```bash
-# development
-$ npm run start
+- **Aggregation layer**: 
+    - A scheduled task runs at a configurable interval. 
+    - It fetches from all active providers concurrently, normalizes responses to a unified schema, upserts products and appends price history when prices change.
+    - It marks products as stale when they haven’t been updated within a threshold.
 
-# watch mode
-$ npm run start:dev
+- **Data layer**: Prisma ORM with PostgreSQL. Models: `Provider`, `Product` (unique per `externalId` + `providerId`), and `PriceHistory` for price change tracking.
+- **REST API**: Paginated product list, product by ID (with history), changes since a timestamp, and an SSE stream for real-time product updates. See Swagger documentation after launching the project at: http://localhost:3000/api/docs
 
-# production mode
-$ npm run start:prod
+## Project structure
+
+```
+simulated-external-providers/  # Provider mock data and services
+public/                       # Static assets (e.g. index.html for SSE demo)
+prisma/
+├── schema.prisma           # Provider, Product, PriceHistory
+└── migrations/
+src/
+├── main.ts                 # Bootstrap, validation, Swagger
+├── app.module.ts
+├── prisma/                 # Prisma module and service
+├── products/               # Products API (controller, service, DTOs)
+├── aggregation/            # Scheduled fetch, normalizer, upsert, stale marking
+├── product-stream/         # SSE stream for product updates
+├── common/                 # Shared DTOs (e.g. pagination)
+└── types/
 ```
 
-## Run tests
+## Setup (Docker vs Manual) 
+
+### Run everything with Docker __(Recommended)__
+
+This starts the API, PostgreSQL, the three simulated providers, and the price fluctuator:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up --build
 ```
 
-## Deployment
+- **API**: http://localhost:3000  
+- **Swagger**: http://localhost:3000/api/docs  
+- **Live SSE demo**: http://localhost:3000 (serves `public/index.html`)  
+- **Provider A**: http://localhost:3001  
+- **Provider B**: http://localhost:3002  
+- **Provider C**: http://localhost:3003  
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Migrations run automatically on app startup via the Dockerfile entrypoint.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Setup and run manually
+
+Note that: Running manually would strip you from any external provider since every provider runs in a dockerized json-server
+
+#### 1. Clone and install
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+git clone <repository-url>
+cd price_aggregator
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+#### 2. Environment configuration
 
-## Resources
+Create a `.env` file in the project root (or copy from `.env.example` if present):
 
-Check out a few resources that may come in handy when working with NestJS:
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/price_aggregator
+FETCH_INTERVAL_MS=10000
+STALE_THRESHOLD_MS=60000
+PORT=3000
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+| `FETCH_INTERVAL_MS` | Aggregation job interval (ms) | `10000` |
+| `STALE_THRESHOLD_MS` | Products not updated within this (ms) are marked stale | `60000` |
+| `PORT` | API server port | `3000` |
 
-## Support
+#### 3. Database
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Ensure PostgreSQL is running and the database exists. Then run migrations and generate the Prisma client:
 
-## Stay in touch
+```bash
+npm run prisma:generate
+npm run prisma:migrate
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+For a quick schema sync without migration history (e.g. dev only):
 
-## License
+```bash
+npm run prisma:push
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+#### 4. Run the API (local, without Docker)
+
+Start the app (provider URLs must point to running simulated providers if you want aggregated data):
+
+```bash
+npm run start:dev
+```
+
+The API will be available at `http://localhost:3000` (or the port set in `PORT`). Swagger docs: **http://localhost:3000/api/docs**.
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/products` | Paginated product list. Query: `name`, `minPrice`, `maxPrice`, `availability`, `provider`, `page`, `limit` |
+| `GET` | `/products/changes` | Products with price/availability changes since a timestamp. Query: `since` (ISO), `page`, `limit` |
+| `GET` | `/products/stream` | Server-Sent Events stream of product updates (new or changed price/availability) |
+| `GET` | `/products/:id` | Single product with provider and price history. 404 if not found |
+
+Interactive documentation is available at **/api/docs** (Swagger).
+
+## Simulated External Providers
+
+Three providers are implemented with different field names and structures:
+
+| Provider   | Role      | Base URL Port | Endpoint (relative) | Payload differences |
+|-----------|------------|---------|----------------------|----------------------|
+| Provider A | EBooks    | 3001 |`/api/providers/a/products` (or similar) | Standard: `id`, `price`, `availability`, `lastUpdated` |
+| Provider B | Software  | 3002 |`/api/providers/b/products`              | Uses `productId`, `cost`, `inStock` instead of `id`/`price`/`availability` |
+| Provider C | Courses   | 3003 | `/api/providers/c/products`              | Nested structure, different date format, `identifier` as ID |
+
+Seed data is stored in JSON files under `simulated-external-providers/` and served by small services. The *fluctuator* container periodically updates prices/availability to simulate real-world changes.
+
+
+## Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run start` | Start app (single run) |
+| `npm run start:dev` | Start in watch mode |
+| `npm run start:prod` | Run built app (e.g. `node dist/main`) |
+| `npm run build` | Build for production |
+| `npm run prisma:generate` | Generate Prisma client |
+| `npm run prisma:migrate` | Run migrations (interactive) |
+| `npm run prisma:push` | Push schema to DB (no migration files) |
+| `npm run prisma:studio` | Open Prisma Studio for the database |
+| `npm run test` | Unit tests |
+| `npm run test:e2e` | E2E tests |
+| `npm run test:cov` | Test coverage |
+| `npm run lint` | Run ESLint |
+
+## Testing
+
+The project uses **Jest** for unit and end-to-end tests.
+
+### Unit tests
+
+Unit tests live next to the code they test (e.g. `src/aggregation/aggregation.service.spec.ts`). They mock external dependencies (Prisma, HTTP, etc.) and focus on service and normalizer logic.
+
+```bash
+npm run test
+```
+
+Generate a coverage report:
+
+```bash
+npm run test:cov
+```
+
+- **Aggregation service** – scheduled fetch, concurrent provider calls, upsert and stale marking
+- **Normalizer** – mapping provider-specific payloads (A, B, C) to the unified product schema
+- **Products service** – pagination, filtering, and product-by-id with history
+
+### E2E tests
+
+End-to-end tests live in `test/` and hit the HTTP API using `supertest`. They use a mocked Prisma layer, so **no real database is required**.
+
+```bash
+npm run test:e2e
+```
+
+They cover the main API surface: `GET /products`, `GET /products/:id`, `GET /products/changes`, and error handling (e.g. 404 for unknown product).
+
+## Design notes
+
+- **Upsert**: Products are upserted by `(externalId, providerId)` to avoid duplicates across fetches.
+- **Price history**: A new `PriceHistory` row is created only when the stored price for a product actually changes.
+- **Resilience**: Provider requests use `Promise.allSettled` and retries (e.g. axios-retry); one failing provider does not block others.
+- **Staleness**: A background step marks products as stale when they have not been updated within `STALE_THRESHOLD_MS`; the API can filter or flag these.

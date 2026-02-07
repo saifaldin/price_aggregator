@@ -47,7 +47,7 @@ export class AggregationService implements OnModuleInit {
     private readonly productStream: ProductStreamService,
   ) {
     this.http = axios.create({
-      timeout: Number(process.env.PROVIDER_TIMEOUT_MS ?? 5000),
+      timeout: Number(5000),
     });
 
     axiosRetry(this.http, {
