@@ -1,5 +1,7 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, Sse } from '@nestjs/common';
 import { ApiNotFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Observable, map } from 'rxjs';
+import { ProductStreamService } from '../product-stream/product-stream.service.js';
 import { ProductsService } from './products.service.js';
 import {
   PaginatedProductChangesResponseDto,
@@ -12,7 +14,10 @@ import {
 @ApiTags('products')
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly productStream: ProductStreamService,
+  ) {}
 
   @ApiOkResponse({
     description: 'Returns a paginated list of products with provider data.',
@@ -31,6 +36,19 @@ export class ProductsController {
   @Get('changes')
   async findChanges(@Query() query: ProductChangesQueryDto) {
     return this.productsService.getProductChanges(query);
+  }
+
+  @ApiOkResponse({
+    description:
+      'Server-Sent Events stream of product updates (new or changed price/availability).',
+  })
+  @Sse('stream')
+  stream(): Observable<{ data: string }> {
+    return this.productStream.getStream().pipe(
+      map((product) => ({
+        data: JSON.stringify(product),
+      })),
+    );
   }
 
   @ApiOkResponse({

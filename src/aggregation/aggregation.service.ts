@@ -3,6 +3,7 @@ import { Interval } from '@nestjs/schedule';
 import axios, { AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
 import moment from 'moment';
+import { ProductStreamService } from '../product-stream/product-stream.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   NormalizedProduct,
@@ -43,6 +44,7 @@ export class AggregationService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly normalizer: NormalizerService,
+    private readonly productStream: ProductStreamService,
   ) {
     this.http = axios.create({
       timeout: Number(process.env.PROVIDER_TIMEOUT_MS ?? 5000),
@@ -163,9 +165,11 @@ export class AggregationService implements OnModuleInit {
             },
           },
         };
-        await this.prisma.product.create({
+        const created = await this.prisma.product.create({
           data: createData,
+          include: { provider: true },
         });
+        this.productStream.emit(created);
       } else {
         const priceChanged =
           existing.currentPrice.toString() !== p.currentPrice.toString();
@@ -192,7 +196,7 @@ export class AggregationService implements OnModuleInit {
               }
             : {}),
         };
-        await this.prisma.product.update({
+        const updated = await this.prisma.product.update({
           where: {
             externalId_providerId: {
               externalId: p.externalId,
@@ -200,7 +204,11 @@ export class AggregationService implements OnModuleInit {
             },
           },
           data: updateData,
+          include: { provider: true },
         });
+        if (shouldWriteHistory) {
+          this.productStream.emit(updated);
+        }
       }
     }
   }

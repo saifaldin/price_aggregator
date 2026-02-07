@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Price Aggregator — Live Updates</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 1.5rem;
+      background: #0f0f12;
+      color: #e4e4e7;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem 0;
+      color: #fafafa;
+    }
+    .subtitle {
+      color: #71717a;
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      margin-bottom: 1.5rem;
+    }
+    .status.connected { background: #14532d33; color: #86efac; }
+    .status.disconnected { background: #450a0a33; color: #fca5a5; }
+    .status .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .status.connected .dot { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .events {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .event {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 0.5rem;
+      padding: 0.875rem 1rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+    .event .name { font-weight: 600; color: #fafafa; }
+    .event .meta { color: #71717a; margin-top: 0.25rem; }
+    .event .price { color: #86efac; font-weight: 500; }
+    .event time { color: #a1a1aa; }
+  </style>
+</head>
+<body>
+  <h1>Price Aggregator</h1>
+  <p class="subtitle">Live product and price updates</p>
+  <div id="status" class="status disconnected">
+    <span class="dot"></span>
+    <span>Connecting…</span>
+  </div>
+  <ul id="events" class="events"></ul>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const eventsEl = document.getElementById('events');
+
+    function setStatus(connected) {
+      statusEl.className = 'status ' + (connected ? 'connected' : 'disconnected');
+      statusEl.querySelector('span:last-child').textContent = connected ? 'Connected' : 'Disconnected';
+    }
+
+    function addEvent(product) {
+      const li = document.createElement('li');
+      li.className = 'event';
+      const time = new Date(product.lastUpdated).toLocaleTimeString();
+      li.innerHTML =
+        '<span class="name">' + '<span style="color:#60a5fa;">' + 'Updated Product: ' + '</span>' + escapeHtml(product.name) + '</span>' +
+        '<div class="meta">' +
+          '<span class="price">' + product.currency + ' ' + product.currentPrice + '</span> · ' +
+          (product.availability ? 'In stock' : 'Out of stock') + ' · ' +
+          escapeHtml(product.provider?.name ?? '') + ' · ' +
+          '<time>' + time + '</time>' +
+        '</div>';
+      eventsEl.insertBefore(li, eventsEl.firstChild);
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    const streamUrl = 'http://localhost:8000/products/stream';
+    const es = new EventSource(streamUrl);
+
+    es.onopen = () => setStatus(true);
+    es.onerror = () => setStatus(false);
+    es.onmessage = (e) => {
+      try {
+        const product = JSON.parse(e.data);
+        addEvent(product);
+      } catch (err) {
+        console.error('Invalid event data', err);
+      }
+    };
+  </script>
+</body>
+</html>
