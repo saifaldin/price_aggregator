@@ -103,7 +103,7 @@
       return div.innerHTML;
     }
 
-    const streamUrl = 'http://localhost:8000/products/stream';
+    const streamUrl = window.location.origin + '/products/stream';
     const es = new EventSource(streamUrl);
 
     es.onopen = () => setStatus(true);

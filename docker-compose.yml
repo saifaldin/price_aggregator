@@ -1,4 +1,28 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/price_aggregator
+      PORT: "3000"
+      PROVIDER_A_URL: http://provider-a:3000
+      PROVIDER_B_URL: http://provider-b:3000
+      PROVIDER_C_URL: http://provider-c:3000
+      FETCH_INTERVAL_MS: "10000"
+      STALE_THRESHOLD_MS: "60000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      provider-a:
+        condition: service_started
+      provider-b:
+        condition: service_started
+      provider-c:
+        condition: service_started
+
   postgres:
     image: postgres:16-alpine
     environment:
