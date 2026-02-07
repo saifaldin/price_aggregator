@@ -63,6 +63,21 @@ flowchart TB
 - **Data layer**: Prisma ORM with PostgreSQL. Models: `Provider`, `Product` (unique per `externalId` + `providerId`), and `PriceHistory` for price change tracking.
 - **REST API**: Paginated product list, product by ID (with history), changes since a timestamp, and an SSE stream for real-time product updates. See Swagger documentation after launching the project at: http://localhost:3000/api/docs
 
+## Design Decisions
+
+### Provider simulation
+I chose a JSON server setup with Docker instead of creating a service inside the main NestJs project. This allows for a better separation of concerns and a cleaner main app, it also lets the aggregator call a different server to better simulate a real world scenario.
+
+### Usage of Indexes
+As seen in the Prisma schema, only fields that would be used in a `where` statement were indexed for a better query response time
+
+### General Notes
+- **Upsert**: Products are upserted by `(externalId, providerId)` to avoid duplicates across fetches.
+- **Price history**: A new `PriceHistory` row is created only when the stored price for a product actually changes.
+- **Resilience**: Provider requests use `Promise.allSettled` and retries (e.g. axios-retry); one failing provider does not block others.
+- **Staleness of Products**: A background step marks products as stale when they have not been updated within `STALE_THRESHOLD_MS`; the API can filter or flag these.
+
+
 ## Project structure
 
 ```
@@ -228,10 +243,3 @@ npm run test:e2e
 ```
 
 They cover the main API surface: `GET /products`, `GET /products/:id`, `GET /products/changes`, and error handling (e.g. 404 for unknown product).
-
-## Design notes
-
-- **Upsert**: Products are upserted by `(externalId, providerId)` to avoid duplicates across fetches.
-- **Price history**: A new `PriceHistory` row is created only when the stored price for a product actually changes.
-- **Resilience**: Provider requests use `Promise.allSettled` and retries (e.g. axios-retry); one failing provider does not block others.
-- **Staleness**: A background step marks products as stale when they have not been updated within `STALE_THRESHOLD_MS`; the API can filter or flag these.
